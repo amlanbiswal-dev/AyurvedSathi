@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.api.dependencies import get_current_user
 from app.core.security import hash_password
 from app.crud.user import create_user, get_user_by_email
 from app.db.database import get_db
@@ -44,3 +45,13 @@ def register_user(
     )
 
     return user
+
+
+@router.get(
+    "/me",
+    response_model=UserResponse,
+)
+def get_current_user_profile(
+    current_user=Depends(get_current_user),
+):
+    return current_user
