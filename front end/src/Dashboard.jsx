@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Particles from './Particles';
 import GooeyNav from './GooeyNav';
+import PageFadeContent from './PageFadeContent';
 import { logoutUser } from './auth';
 
 const navItems = [
@@ -166,22 +167,24 @@ export default function Dashboard({ onLogout }) {
           padding: '24px',
           backdropFilter: 'blur(8px)',
         }}>
-          <div style={{ marginBottom: '22px' }}>
-            <p style={{ margin: 0, color: '#7ae2b4', fontSize: '0.75rem', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-              {activeSection.title}
-            </p>
-            <h3 style={{ margin: '10px 0 0', fontSize: '2rem' }}>{activeSection.subtitle}</h3>
-          </div>
+          <PageFadeContent key={activePage} duration={400} ease="power2.out" initialOpacity={0}>
+            <div style={{ marginBottom: '22px' }}>
+              <p style={{ margin: 0, color: '#7ae2b4', fontSize: '0.75rem', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                {activeSection.title}
+              </p>
+              <h3 style={{ margin: '10px 0 0', fontSize: '2rem' }}>{activeSection.subtitle}</h3>
+            </div>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: '20px',
-          }}>
-            {activeSection.cards.map((card) => (
-              <Card key={card.title} title={card.title} value={card.value} />
-            ))}
-          </div>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: '20px',
+            }}>
+              {activeSection.cards.map((card) => (
+                <Card key={card.title} title={card.title} value={card.value} />
+              ))}
+            </div>
+          </PageFadeContent>
         </main>
       </div>
     </div>
