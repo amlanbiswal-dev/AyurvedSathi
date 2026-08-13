@@ -216,3 +216,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# AyurvedSathi local/development files
+.env.*
+!.env.example
+
+# VS Code
+.vscode/
+
+# Local database files
+*.sqlite3
+*.db
