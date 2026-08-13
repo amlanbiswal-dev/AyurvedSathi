@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from app.api.routes import auth, health, users
+from app.api.routes import auth, health, health_profile, users
 
 
 app = FastAPI(
@@ -12,6 +12,7 @@ app = FastAPI(
 app.include_router(auth.router)
 app.include_router(health.router)
 app.include_router(users.router)
+app.include_router(health_profile.router)
 
 
 @app.get("/")
