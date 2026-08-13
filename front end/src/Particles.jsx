@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Renderer, Camera, Geometry, Program, Mesh } from 'ogl';
 import './Particles.css';
 
-const defaultColors = ['#ffffff', '#ffffff', '#ffffff'];
+const defaultColors = ['#38bb3f', '#b36666', '#afc43b'];
 
 const hexToRgb = (hex) => {
   hex = hex.replace(/^#/, '');
@@ -90,7 +90,7 @@ const Particles = ({
   particleSpread = 10,
   speed = 0.1,
   particleColors,
-  moveParticlesOnHover = false,
+  moveParticlesOnHover = true,
   particleHoverFactor = 1,
   alphaParticles = false,
   particleBaseSize = 100,
@@ -99,6 +99,8 @@ const Particles = ({
   disableRotation = false,
   pixelRatio = 1,
   className = '',
+  style,
+  ...props
 }) => {
   const containerRef = useRef(null);
   const mouseRef = useRef({ x: 0, y: 0 });
@@ -120,23 +122,23 @@ const Particles = ({
     camera.position.set(0, 0, cameraDistance);
 
     const resize = () => {
-      const width = container.clientWidth;
-      const height = container.clientHeight;
+      const width = window.innerWidth;
+      const height = window.innerHeight;
       renderer.setSize(width, height);
       camera.perspective({ aspect: gl.canvas.width / gl.canvas.height });
     };
     window.addEventListener('resize', resize, false);
     resize();
 
+    // Listen to mouse movements globally across the window
     const handleMouseMove = (e) => {
-      const rect = container.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      const y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
+      const x = (e.clientX / window.innerWidth) * 2 - 1;
+      const y = -((e.clientY / window.innerHeight) * 2 - 1);
       mouseRef.current = { x, y };
     };
 
     if (moveParticlesOnHover) {
-      container.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mousemove', handleMouseMove);
     }
 
     const count = particleCount;
@@ -216,7 +218,7 @@ const Particles = ({
     return () => {
       window.removeEventListener('resize', resize);
       if (moveParticlesOnHover) {
-        container.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mousemove', handleMouseMove);
       }
       cancelAnimationFrame(animationFrameId);
       if (container.contains(gl.canvas)) {
@@ -237,7 +239,23 @@ const Particles = ({
     pixelRatio,
   ]);
 
-  return <div ref={containerRef} className={`particles-container ${className}`.trim()} />;
+  return (
+    <div
+      ref={containerRef}
+      className={`particles-container ${className}`.trim()}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        pointerEvents: 'none', // 👈 Lets cursor events pass straight through to UI tiles
+        zIndex: 0,
+        ...style,
+      }}
+      {...props}
+    />
+  );
 };
 
 export default Particles;
