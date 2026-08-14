@@ -7,6 +7,7 @@ from app.crud.health_profile import get_health_profile_by_user_id
 from app.crud.message import (
     create_message,
     get_conversation_messages,
+    get_recent_conversation_messages,
 )
 from app.db.database import get_db
 from app.schemas.message import MessageCreate, MessageResponse
@@ -68,9 +69,10 @@ def send_message(
         content=message_data.content,
     )
 
-    previous_messages = get_conversation_messages(
+    recent_messages = get_recent_conversation_messages(
         db=db,
         conversation_id=conversation_id,
+        limit=20,
     )
 
     conversation_history = [
@@ -78,7 +80,7 @@ def send_message(
             "role": message.role,
             "content": message.content,
         }
-        for message in previous_messages
+        for message in reversed(recent_messages)
         if message.id != user_message.id
     ]
 

@@ -30,6 +30,20 @@ def get_conversation_messages(
     )
 
 
+def get_recent_conversation_messages(
+    db: Session,
+    conversation_id: int,
+    limit: int = 20,
+):
+    return (
+        db.query(Message)
+        .filter(Message.conversation_id == conversation_id)
+        .order_by(Message.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+
 def create_message(
     db: Session,
     conversation_id: int,
