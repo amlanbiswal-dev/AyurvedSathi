@@ -9,6 +9,7 @@ from app.crud.message import (
 )
 from app.db.database import get_db
 from app.schemas.message import MessageCreate, MessageResponse
+from app.services.ai_service import generate_ai_response
 
 
 router = APIRouter(
@@ -59,14 +60,46 @@ def send_message(
         user_id=current_user.id,
     )
 
-    message = create_message(
+    user_message = create_message(
         db=db,
         conversation_id=conversation_id,
-        role=message_data.role,
+        role="user",
         content=message_data.content,
     )
 
-    return message
+    previous_messages = get_conversation_messages(
+        db=db,
+        conversation_id=conversation_id,
+    )
+
+    conversation_history = [
+        {
+            "role": message.role,
+            "content": message.content,
+        }
+        for message in previous_messages
+        if message.id != user_message.id
+    ]
+
+    try:
+        ai_response = generate_ai_response(
+            user_message=message_data.content,
+            conversation_history=conversation_history,
+        )
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Unable to generate AI response",
+        )
+
+    assistant_message = create_message(
+        db=db,
+        conversation_id=conversation_id,
+        role="assistant",
+        content=ai_response,
+    )
+
+    return assistant_message
 
 
 @router.get(
