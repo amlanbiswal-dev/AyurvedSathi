@@ -1,10 +1,27 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ConversationCreate(BaseModel):
     title: str | None = None
+
+
+class ConversationUpdate(BaseModel):
+    title: str = Field(
+        min_length=1,
+        max_length=255,
+    )
+
+    @field_validator("title")
+    @classmethod
+    def validate_title(cls, value: str) -> str:
+        value = value.strip()
+
+        if not value:
+            raise ValueError("Conversation title cannot be empty")
+
+        return value
 
 
 class ConversationResponse(BaseModel):
@@ -14,6 +31,6 @@ class ConversationResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    model_config = {
-        "from_attributes": True
-    }
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
