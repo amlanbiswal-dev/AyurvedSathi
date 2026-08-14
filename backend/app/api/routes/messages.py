@@ -108,10 +108,12 @@ def send_message(
             conversation_history=conversation_history,
             health_profile=health_profile_data,
         )
-    except Exception:
+    except Exception as e:
+        print("AI SERVICE ERROR:", repr(e))
+
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Unable to generate AI response",
+            detail=f"Unable to generate AI response: {str(e)}",
         )
 
     try:
