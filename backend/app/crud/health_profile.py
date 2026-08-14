@@ -25,6 +25,22 @@ def create_health_profile(
     allergies: str | None = None,
     health_conditions: str | None = None,
 ):
+    # Validate numeric fields
+    if age is not None and (age < 0 or age > 120):
+        raise ValueError("Invalid age")
+
+    if height_cm is not None and (height_cm < 30 or height_cm > 300):
+        raise ValueError("Invalid height")
+
+    if weight_kg is not None and (weight_kg < 1 or weight_kg > 500):
+        raise ValueError("Invalid weight")
+
+    # Clean text inputs
+    gender = gender.strip() if gender else None
+    diet_preference = diet_preference.strip() if diet_preference else None
+    allergies = allergies.strip() if allergies else None
+    health_conditions = health_conditions.strip() if health_conditions else None
+
     health_profile = HealthProfile(
         user_id=user_id,
         age=age,
@@ -48,9 +64,36 @@ def update_health_profile(
     health_profile: HealthProfile,
     **updates,
 ):
+    allowed_fields = {
+        "age",
+        "gender",
+        "height_cm",
+        "weight_kg",
+        "diet_preference",
+        "allergies",
+        "health_conditions",
+    }
+
     for field, value in updates.items():
-        if hasattr(health_profile, field):
-            setattr(health_profile, field, value)
+        if field not in allowed_fields:
+            continue
+
+        if field == "age" and value is not None:
+            if value < 0 or value > 120:
+                raise ValueError("Invalid age")
+
+        if field == "height_cm" and value is not None:
+            if value < 30 or value > 300:
+                raise ValueError("Invalid height")
+
+        if field == "weight_kg" and value is not None:
+            if value < 1 or value > 500:
+                raise ValueError("Invalid weight")
+
+        if isinstance(value, str):
+            value = value.strip()
+
+        setattr(health_profile, field, value)
 
     db.commit()
     db.refresh(health_profile)

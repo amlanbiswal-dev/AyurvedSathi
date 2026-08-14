@@ -18,7 +18,7 @@ def get_user_recommendations(
     db: Session,
     user_id: int,
     skip: int = 0,
-    limit: int = 100,
+    limit: int = 20,
 ):
     return (
         db.query(Recommendation)
@@ -36,6 +36,25 @@ def create_recommendation(
     recommendation_type: str,
     content: str,
 ):
+    recommendation_type = recommendation_type.strip()
+    content = content.strip()
+
+    allowed_types = {
+        "diet",
+        "exercise",
+        "lifestyle",
+        "general",
+    }
+
+    if recommendation_type not in allowed_types:
+        raise ValueError("Invalid recommendation type")
+
+    if not content:
+        raise ValueError("Recommendation content cannot be empty")
+
+    if len(content) > 5000:
+        raise ValueError("Recommendation content is too long")
+
     recommendation = Recommendation(
         user_id=user_id,
         type=recommendation_type,

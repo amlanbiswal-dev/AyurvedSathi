@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+import logging
+
+from fastapi import APIRouter, Depends, HTTPException, Path, status
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_user
@@ -17,6 +19,9 @@ from app.schemas.conversation import (
 )
 
 
+logger = logging.getLogger(__name__)
+
+
 router = APIRouter(
     prefix="/conversations",
     tags=["Conversations"],
@@ -33,10 +38,18 @@ def create_my_conversation(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    title = conversation_data.title.strip() if conversation_data.title else None
+
     conversation = create_conversation(
         db=db,
         user_id=current_user.id,
-        title=conversation_data.title,
+        title=title,
+    )
+
+    logger.info(
+        "User %s created conversation %s",
+        current_user.id,
+        conversation.id,
     )
 
     return conversation
@@ -50,6 +63,11 @@ def get_my_conversations(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    logger.info(
+        "User %s requested conversation list",
+        current_user.id,
+    )
+
     return get_user_conversations(
         db=db,
         user_id=current_user.id,
@@ -61,8 +79,8 @@ def get_my_conversations(
     response_model=ConversationResponse,
 )
 def update_my_conversation(
-    conversation_id: int,
-    conversation_data: ConversationUpdate,
+    conversation_id: int = Path(..., gt=0),
+    conversation_data: ConversationUpdate = ...,
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -71,23 +89,44 @@ def update_my_conversation(
         conversation_id=conversation_id,
     )
 
-    if not conversation:
+    if conversation is None:
+        logger.warning(
+            "Conversation %s not found",
+            conversation_id,
+        )
+
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Conversation not found",
         )
 
     if conversation.user_id != current_user.id:
+        logger.warning(
+            "Unauthorized update attempt by user %s on conversation %s",
+            current_user.id,
+            conversation_id,
+        )
+
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have access to this conversation",
         )
 
-    return update_conversation(
+    title = conversation_data.title.strip() if conversation_data.title else None
+
+    updated = update_conversation(
         db=db,
         conversation=conversation,
-        title=conversation_data.title,
+        title=title,
     )
+
+    logger.info(
+        "Conversation %s updated by user %s",
+        conversation_id,
+        current_user.id,
+    )
+
+    return updated
 
 
 @router.delete(
@@ -95,7 +134,7 @@ def update_my_conversation(
     status_code=status.HTTP_204_NO_CONTENT,
 )
 def delete_my_conversation(
-    conversation_id: int,
+    conversation_id: int = Path(..., gt=0),
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -104,13 +143,24 @@ def delete_my_conversation(
         conversation_id=conversation_id,
     )
 
-    if not conversation:
+    if conversation is None:
+        logger.warning(
+            "Conversation %s not found",
+            conversation_id,
+        )
+
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Conversation not found",
         )
 
     if conversation.user_id != current_user.id:
+        logger.warning(
+            "Unauthorized delete attempt by user %s on conversation %s",
+            current_user.id,
+            conversation_id,
+        )
+
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have access to this conversation",
@@ -119,6 +169,12 @@ def delete_my_conversation(
     delete_conversation(
         db=db,
         conversation=conversation,
+    )
+
+    logger.info(
+        "Conversation %s deleted by user %s",
+        conversation_id,
+        current_user.id,
     )
 
     return None

@@ -18,7 +18,7 @@ def get_user_conversations(
     db: Session,
     user_id: int,
     skip: int = 0,
-    limit: int = 100,
+    limit: int = 20,
 ):
     return (
         db.query(Conversation)
@@ -34,6 +34,12 @@ def create_conversation(
     user_id: int,
     title: str | None = None,
 ):
+    if title:
+        title = title.strip()
+
+        if len(title) > 255:
+            raise ValueError("Title is too long")
+
     conversation = Conversation(
         user_id=user_id,
         title=title,
@@ -51,6 +57,12 @@ def update_conversation(
     conversation: Conversation,
     title: str | None,
 ):
+    if title:
+        title = title.strip()
+
+        if len(title) > 255:
+            raise ValueError("Title is too long")
+
     conversation.title = title
 
     db.commit()

@@ -18,7 +18,7 @@ def get_conversation_messages(
     db: Session,
     conversation_id: int,
     skip: int = 0,
-    limit: int = 100,
+    limit: int = 20,
 ):
     return (
         db.query(Message)
@@ -50,6 +50,20 @@ def create_message(
     role: str,
     content: str,
 ):
+    role = role.strip()
+    content = content.strip()
+
+    allowed_roles = {"user", "assistant", "system"}
+
+    if role not in allowed_roles:
+        raise ValueError("Invalid message role")
+
+    if not content:
+        raise ValueError("Message content cannot be empty")
+
+    if len(content) > 5000:
+        raise ValueError("Message content is too long")
+
     message = Message(
         conversation_id=conversation_id,
         role=role,

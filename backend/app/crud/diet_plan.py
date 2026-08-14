@@ -18,7 +18,7 @@ def get_user_diet_plans(
     db: Session,
     user_id: int,
     skip: int = 0,
-    limit: int = 100,
+    limit: int = 20,
 ):
     return (
         db.query(DietPlan)
@@ -36,6 +36,21 @@ def create_diet_plan(
     title: str,
     content: str,
 ):
+    title = title.strip()
+    content = content.strip()
+
+    if not title:
+        raise ValueError("Title cannot be empty")
+
+    if not content:
+        raise ValueError("Content cannot be empty")
+
+    if len(title) > 255:
+        raise ValueError("Title is too long")
+
+    if len(content) > 5000:
+        raise ValueError("Content is too long")
+
     diet_plan = DietPlan(
         user_id=user_id,
         title=title,
