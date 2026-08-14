@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_user
@@ -128,6 +128,15 @@ def send_message(
 )
 def get_messages(
     conversation_id: int,
+    skip: int = Query(
+        default=0,
+        ge=0,
+    ),
+    limit: int = Query(
+        default=50,
+        ge=1,
+        le=100,
+    ),
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -140,4 +149,6 @@ def get_messages(
     return get_conversation_messages(
         db=db,
         conversation_id=conversation_id,
+        skip=skip,
+        limit=limit,
     )
