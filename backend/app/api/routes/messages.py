@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_user
 from app.crud.conversation import get_conversation_by_id
+from app.crud.health_profile import get_health_profile_by_user_id
 from app.crud.message import (
     create_message,
     get_conversation_messages,
@@ -81,10 +82,29 @@ def send_message(
         if message.id != user_message.id
     ]
 
+    health_profile = get_health_profile_by_user_id(
+        db=db,
+        user_id=current_user.id,
+    )
+
+    health_profile_data = None
+
+    if health_profile:
+        health_profile_data = {
+            "age": health_profile.age,
+            "gender": health_profile.gender,
+            "height_cm": health_profile.height_cm,
+            "weight_kg": health_profile.weight_kg,
+            "diet_preference": health_profile.diet_preference,
+            "allergies": health_profile.allergies,
+            "health_conditions": health_profile.health_conditions,
+        }
+
     try:
         ai_response = generate_ai_response(
             user_message=message_data.content,
             conversation_history=conversation_history,
+            health_profile=health_profile_data,
         )
     except Exception:
         raise HTTPException(
