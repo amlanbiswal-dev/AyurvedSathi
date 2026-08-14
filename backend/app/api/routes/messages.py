@@ -114,12 +114,20 @@ def send_message(
             detail="Unable to generate AI response",
         )
 
-    assistant_message = create_message(
-        db=db,
-        conversation_id=conversation_id,
-        role="assistant",
-        content=ai_response,
-    )
+    try:
+        assistant_message = create_message(
+            db=db,
+            conversation_id=conversation_id,
+            role="assistant",
+            content=ai_response,
+        )
+    except Exception:
+        db.rollback()
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to save AI response",
+        )
 
     return assistant_message
 
